@@ -14,7 +14,9 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@codemirror/lang-html": "^6.4.9",
     "vue": "^3.4.21",
+    "vue-codemirror6": "^1.2.5",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
@@ -29,6 +31,7 @@
     "eslint-plugin-vue": "^9.23.0",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
+    "sass": "^1.75.0",
     "start-server-and-test": "^2.0.3",
     "vite": "^5.2.8",
     "vitest": "^1.4.0"
