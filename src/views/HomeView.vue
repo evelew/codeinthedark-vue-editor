@@ -10,11 +10,12 @@ import Instructions from '@/components/Instructions.vue'
 
 const STORAGE_NAME_KEY = 'name'
 
+const code = ref(null)
 const name = ref(null)
 const isInstructionsVisible = ref(false)
 
-const lang = new Compartment().of(html({ autoCloseTags: false }))
-const setup = [lineNumbers(), highlightActiveLineGutter()]
+const lang = new Compartment().of(html({}))
+const extensions = [lineNumbers(), highlightActiveLineGutter()]
 
 const showInstructions = () => {
   isInstructionsVisible.value = true
@@ -22,6 +23,17 @@ const showInstructions = () => {
 
 const closeInstructions = () => {
   isInstructionsVisible.value = false
+}
+
+const finish = () => {
+  const res = prompt(
+    'This will show the results of your code. Doing this before the round is over WILL DISQUALIFY YOU. Are you sure you want to proceed? Type "yes" to confirm.'
+  )
+
+  if (res.toLowerCase() === 'yes') {
+    console.log(`mostrar resultado`)
+    console.log(code)
+  }
 }
 
 const getName = (forceNewName = false) => {
@@ -48,7 +60,7 @@ onMounted(() => {
       <p class="combo-number">0</p>
     </div>
 
-    <CodeMirror :extensions="setup" :lang="lang" value="jdaiajdsia aisjdidasj" />
+    <CodeMirror v-model="code" :extensions="extensions" :lang="lang" minimal tab />
 
     <div class="name">
       <Button class="name-button" size="large" @click="getName(true)">{{ name }}</Button>
@@ -62,7 +74,7 @@ onMounted(() => {
 
       <div class="buttons">
         <Button size="small" @click="showInstructions" @click.stop>Instructions</Button>
-        <Button size="small">Finish</Button>
+        <Button size="small" @click="finish">Finish</Button>
       </div>
     </div>
 
@@ -72,8 +84,6 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .editor {
-  background-color: #000000;
-
   .combo {
     color: #ffffff;
     font-family: 'Press Start 2P';
@@ -108,6 +118,7 @@ onMounted(() => {
       flex-flow: column;
 
       p {
+        color: #ffffff;
         font-family: 'Press Start 2P';
         font-size: 12px;
         margin-bottom: 15px;
@@ -147,7 +158,17 @@ onMounted(() => {
 
   :deep(.cm-content) {
     color: #ffffff;
-    caret-color: #fff;
+    caret-color: #ffffff !important;
+  }
+
+  :deep(.cm-editor) {
+    background-color: #000000;
+  }
+
+  :deep(.cm-cursor) {
+    background-color: #ffffff;
+    display: block !important;
+    width: 3px;
   }
 }
 </style>
