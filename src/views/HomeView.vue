@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted, ref } from 'vue'
 import CodeMirror from 'vue-codemirror6'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { Compartment } from '@codemirror/state'
@@ -6,8 +7,28 @@ import { html } from '@codemirror/lang-html'
 
 import Button from '@/components/Button.vue'
 
+const STORAGE_NAME_KEY = 'name'
+
+const name = ref(null)
+
 const lang = new Compartment().of(html({ autoCloseTags: false }))
 const setup = [lineNumbers(), highlightActiveLineGutter()]
+
+const getName = (forceNewName = false) => {
+  const localStorageName = localStorage.getItem(STORAGE_NAME_KEY)
+  if (localStorageName && !forceNewName) {
+    name.value = localStorageName
+    return
+  }
+
+  const userName = prompt("what's your name?")
+  localStorage.setItem(STORAGE_NAME_KEY, userName)
+  name.value = userName
+}
+
+onMounted(() => {
+  getName()
+})
 </script>
 
 <template>
@@ -20,7 +41,7 @@ const setup = [lineNumbers(), highlightActiveLineGutter()]
     <CodeMirror :extensions="setup" :lang="lang" value="jdaiajdsia aisjdidasj" />
 
     <div class="name">
-      <Button class="name-button" size="large">evs</Button>
+      <Button class="name-button" size="large" @click="getName(true)">{{ name }}</Button>
     </div>
 
     <div class="right-bottom">
