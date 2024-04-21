@@ -6,13 +6,23 @@ import { Compartment } from '@codemirror/state'
 import { html } from '@codemirror/lang-html'
 
 import Button from '@/components/Button.vue'
+import Instructions from '@/components/Instructions.vue'
 
 const STORAGE_NAME_KEY = 'name'
 
 const name = ref(null)
+const isInstructionsVisible = ref(false)
 
 const lang = new Compartment().of(html({ autoCloseTags: false }))
 const setup = [lineNumbers(), highlightActiveLineGutter()]
+
+const showInstructions = () => {
+  isInstructionsVisible.value = true
+}
+
+const closeInstructions = () => {
+  isInstructionsVisible.value = false
+}
 
 const getName = (forceNewName = false) => {
   const localStorageName = localStorage.getItem(STORAGE_NAME_KEY)
@@ -32,7 +42,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="editor">
+  <div class="editor" @click="closeInstructions">
     <div class="combo">
       <p>Combo</p>
       <p class="combo-number">0</p>
@@ -51,10 +61,12 @@ onMounted(() => {
       </div>
 
       <div class="buttons">
-        <Button size="small">Instructions</Button>
+        <Button size="small" @click="showInstructions" @click.stop>Instructions</Button>
         <Button size="small">Finish</Button>
       </div>
     </div>
+
+    <Instructions v-if="isInstructionsVisible" @click.stop />
   </div>
 </template>
 
