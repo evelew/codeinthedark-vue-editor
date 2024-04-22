@@ -15,6 +15,7 @@ const STORAGE_NAME_KEY = 'name'
 const code = ref(null)
 const name = ref(null)
 const isInstructionsVisible = ref(false)
+const isReferenceFocused = ref(false)
 
 const lang = new Compartment().of(html({}))
 const extensions = [
@@ -47,12 +48,19 @@ const extensions = [
   )
 ]
 
+const focusOnReference = () => {
+  isReferenceFocused.value = true
+  isInstructionsVisible.value = false
+}
+
 const showInstructions = () => {
   isInstructionsVisible.value = true
+  isReferenceFocused.value = false
 }
 
 const closeInstructions = () => {
   isInstructionsVisible.value = false
+  isReferenceFocused.value = false
 }
 
 const finish = () => {
@@ -96,11 +104,13 @@ onMounted(() => {
       <Button class="name-button" size="large" @click="getName(true)">{{ name }}</Button>
     </div>
 
+    <img v-if="isReferenceFocused" class="reference-image" src="@/assets/challenge/page.jpg" />
+
     <div class="right-bottom">
-      <div class="reference">
+      <button v-if="!isReferenceFocused" class="reference" @click="focusOnReference" @click.stop>
         <p>Reference</p>
         <img src="@/assets/challenge/page.jpg" />
-      </div>
+      </button>
 
       <div class="buttons">
         <Button size="small" @click="showInstructions" @click.stop>Instructions</Button>
@@ -137,6 +147,14 @@ onMounted(() => {
     }
   }
 
+  .reference-image {
+    left: 50%;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    width: 800px;
+  }
+
   .right-bottom {
     bottom: 20px;
     position: absolute;
@@ -146,6 +164,7 @@ onMounted(() => {
       align-items: flex-end;
       display: flex;
       flex-flow: column;
+      width: 100%;
 
       p {
         color: #ffffff;
