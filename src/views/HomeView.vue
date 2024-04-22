@@ -4,6 +4,8 @@ import CodeMirror from 'vue-codemirror6'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { Compartment } from '@codemirror/state'
 import { html } from '@codemirror/lang-html'
+import { syntaxHighlighting } from '@codemirror/language'
+import { classHighlighter, tagHighlighter, tags } from '@lezer/highlight'
 
 import Button from '@/components/Button.vue'
 import Instructions from '@/components/Instructions.vue'
@@ -15,7 +17,35 @@ const name = ref(null)
 const isInstructionsVisible = ref(false)
 
 const lang = new Compartment().of(html({}))
-const extensions = [lineNumbers(), highlightActiveLineGutter()]
+const extensions = [
+  lineNumbers(),
+  highlightActiveLineGutter(),
+  syntaxHighlighting(classHighlighter),
+  syntaxHighlighting(
+    tagHighlighter([
+      {
+        tag: tags.angleBracket,
+        class: 'tok-angle-bracket'
+      },
+      {
+        tag: tags.name,
+        class: 'tok-name'
+      },
+      {
+        tag: tags.tagName,
+        class: 'tok-tag-name'
+      },
+      {
+        tag: tags.className,
+        class: 'tok-class-name'
+      },
+      {
+        tag: tags.attributeName,
+        class: 'tok-atribute-name'
+      }
+    ])
+  )
+]
 
 const showInstructions = () => {
   isInstructionsVisible.value = true
