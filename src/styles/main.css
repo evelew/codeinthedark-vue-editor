@@ -40,7 +40,7 @@ main {
   width: 100vw;
 }
 
-/* editor code styles */
+/* start editor code styles */
 .tok-operator,
 .tok-typeName,
 .tok-className,
@@ -65,3 +65,28 @@ main {
   color: #f9ff00;
   animation: pulse 1.5s infinite both;
 }
+
+.editor--power-mode {
+  .tok-operator,
+  .tok-typeName,
+  .tok-className,
+  .tok-angle-bracket {
+    color: #00ddff;
+  }
+
+  .tok-comment {
+    color: #00ff79;
+  }
+
+  .tok-atom,
+  .tok-operator,
+  .tok-string,
+  .tok-name {
+    color: #f9ff00;
+  }
+
+  .tok-atribute-name {
+    color: #8194f4;
+  }
+}
+/* end editor code styles */

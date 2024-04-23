@@ -27,6 +27,7 @@ const comboCount = ref(0)
 const isInstructionsVisible = ref(false)
 const isReferenceFocused = ref(false)
 const isComboBarAnimated = ref(false)
+const isOnPowerMode = ref(true)
 
 const lang = new Compartment().of(html({}))
 const extensions = [
@@ -123,7 +124,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="editor" @click="closeInstructions">
+  <section
+    class="editor"
+    :class="{ 'editor--power-mode': isOnPowerMode }"
+    @click="closeInstructions"
+  >
+    <p v-if="isOnPowerMode" class="power-mode-title">POWER MODE!</p>
+
     <div class="combo">
       <p class="combo-title">Combo</p>
       <p class="combo-number">{{ comboCount }}</p>
@@ -169,6 +176,17 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .editor {
+  .power-mode-title {
+    color: #0df0df;
+    font-family: 'Press Start 2P';
+    font-size: 40px;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+    top: 20px;
+    z-index: 2;
+  }
+
   .combo {
     color: #ffffff;
     font-family: 'Press Start 2P';
