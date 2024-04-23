@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import CodeMirror from 'vue-codemirror6'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { Compartment } from '@codemirror/state'
@@ -7,10 +8,15 @@ import { html } from '@codemirror/lang-html'
 import { syntaxHighlighting } from '@codemirror/language'
 import { classHighlighter, tagHighlighter, tags } from '@lezer/highlight'
 
+import { useContentStore } from '@/store/contentStore'
+
 import Button from '@/components/Button.vue'
 import Instructions from '@/components/Instructions.vue'
 
 const STORAGE_NAME_KEY = 'name'
+
+const router = useRouter()
+const contentStore = useContentStore()
 
 const code = ref(null)
 const name = ref(null)
@@ -69,8 +75,8 @@ const finish = () => {
   )
 
   if (res.toLowerCase() === 'yes') {
-    console.log(`mostrar resultado`)
-    console.log(code)
+    contentStore.setFinalCode(code.value)
+    router.push({ name: 'result' })
   }
 }
 
@@ -92,7 +98,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="editor" @click="closeInstructions">
+  <section class="editor" @click="closeInstructions">
     <div class="combo">
       <p>Combo</p>
       <p class="combo-number">0</p>
@@ -119,7 +125,7 @@ onMounted(() => {
     </div>
 
     <Instructions v-if="isInstructionsVisible" @click.stop />
-  </div>
+  </section>
 </template>
 
 <style lang="scss" scoped>
