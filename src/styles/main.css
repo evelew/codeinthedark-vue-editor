@@ -1,3 +1,67 @@
+@keyframes pulse {
+  0% {
+    animation-timing-function: ease-out;
+  }
+  50% {
+    opacity: 0.5;
+    animation-timing-function: ease-in;
+  }
+}
+
+@keyframes grow {
+  0% {
+    animation-timing-function: ease-out;
+  }
+  50% {
+    transform: scale(1.1);
+    animation-timing-function: ease-in;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   background-color: white;
+  margin: 0;
+}
+
+button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+main {
+  min-height: 100vh;
+  width: 100vw;
+}
+
+/* editor code styles */
+.tok-operator,
+.tok-typeName,
+.tok-className,
+.tok-angle-bracket {
+  color: #00ff79;
+}
+
+.tok-atribute-name {
+  color: #99cc99;
+}
+
+.tok-comment {
+  color: #0dfdff;
+  display: inline-block;
+  animation: grow 1.5s infinite both;
+}
+
+.tok-atom,
+.tok-operator,
+.tok-string,
+.tok-name {
+  color: #f9ff00;
+  animation: pulse 1.5s infinite both;
 }

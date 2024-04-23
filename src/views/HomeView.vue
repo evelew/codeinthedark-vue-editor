@@ -1,6 +1,9 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import debounce from 'lodash/debounce'
+import defer from 'lodash/defer'
+
 import CodeMirror from 'vue-codemirror6'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { Compartment } from '@codemirror/state'
@@ -20,8 +23,10 @@ const contentStore = useContentStore()
 
 const code = ref(null)
 const name = ref(null)
+const comboCount = ref(0)
 const isInstructionsVisible = ref(false)
 const isReferenceFocused = ref(false)
+const isComboBarAnimated = ref(false)
 
 const lang = new Compartment().of(html({}))
 const extensions = [
@@ -92,6 +97,26 @@ const getName = (forceNewName = false) => {
   name.value = userName
 }
 
+const debouncedResetComboCount = debounce(() => {
+  comboCount.value = 0
+}, 10000)
+
+const updateCombo = () => {
+  isComboBarAnimated.value = false
+
+  comboCount.value++
+  debouncedResetComboCount()
+
+  defer(() => {
+    isComboBarAnimated.value = true
+  })
+}
+
+const onType = (event) => {
+  if (event.key === 'Backspace') return
+  updateCombo()
+}
+
 onMounted(() => {
   getName()
 })
@@ -100,11 +125,25 @@ onMounted(() => {
 <template>
   <section class="editor" @click="closeInstructions">
     <div class="combo">
-      <p>Combo</p>
-      <p class="combo-number">0</p>
+      <p class="combo-title">Combo</p>
+      <p class="combo-number">{{ comboCount }}</p>
+      <span
+        v-if="comboCount > 0"
+        class="combo-bar"
+        :class="{
+          'combo-bar--animation': isComboBarAnimated
+        }"
+      />
     </div>
 
-    <CodeMirror v-model="code" :extensions="extensions" :lang="lang" minimal tab />
+    <CodeMirror
+      v-model="code"
+      :extensions="extensions"
+      :lang="lang"
+      minimal
+      tab
+      @keydown="onType"
+    />
 
     <div class="name">
       <Button class="name-button" size="large" @click="getName(true)">{{ name }}</Button>
@@ -134,14 +173,35 @@ onMounted(() => {
     color: #ffffff;
     font-family: 'Press Start 2P';
     right: 20px;
-    position: fixed;
+    position: absolute;
     text-align: center;
     top: 20px;
+    z-index: 2;
+
+    &-title {
+      text-align: right;
+    }
 
     &-number {
       color: #4effa1;
       font-size: 80px;
       margin-top: 30px;
+    }
+
+    &-bar {
+      background-color: #4effa1;
+      display: block;
+      height: 8px;
+      margin-top: 23px;
+      opacity: 0.5;
+      position: relative;
+      transform: scaleX(1);
+      width: 100%;
+
+      &--animation {
+        transform: scaleX(0);
+        transition: all 10000ms linear;
+      }
     }
   }
 
