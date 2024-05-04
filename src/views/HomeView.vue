@@ -1,8 +1,9 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import debounce from 'lodash/debounce'
 import defer from 'lodash/defer'
+import throttle from 'lodash/throttle'
 
 import CodeMirror from 'vue-codemirror6'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
@@ -21,15 +22,34 @@ const STORAGE_NAME_KEY = 'name'
 const router = useRouter()
 const contentStore = useContentStore()
 
+const MAX_PARTICLES = 12
+const EXCLAMATION_EVERY = 10
+const POWER_MODE_ACTIVATION_THRESHOLD = 200
+
+const cm = ref()
+const canvas = ref()
+const canvasContext = ref(null)
+const particles = ref([])
+const lastDraw = ref(0)
+const particlePointer = ref(0)
 const code = ref(null)
 const name = ref(null)
-const comboCount = ref(0)
+const comboCount = ref(200) //TODO: change name to current streak and set initial value to 0
+const PARTICLE_ALPHA_FADEOUT = ref(0.96)
+const PARTICLE_GRAVITY = ref(0.075)
 const isInstructionsVisible = ref(false)
 const isReferenceFocused = ref(false)
 const isComboBarAnimated = ref(false)
 const isOnPowerMode = ref(true)
 
-const lang = new Compartment().of(html({}))
+const editorMargin = ref('0px')
+const theme = computed(() => ({
+  '.cm-scroller': {
+    margin: editorMargin.value
+  }
+}))
+
+const lang = new Compartment().of(html())
 const extensions = [
   lineNumbers(),
   highlightActiveLineGutter(),
@@ -115,11 +135,140 @@ const updateCombo = () => {
 
 const onType = (event) => {
   if (event.key === 'Backspace') return
+  increaseStreak()
+  shake()
+}
+
+const getRandomNumberBetween = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
+const increaseStreak = () => {
   updateCombo()
+
+  if (comboCount.value > 0 && comboCount.value % EXCLAMATION_EVERY === 0) {
+    console.log('show exclamation ')
+    // @showExclamation()
+  }
+
+  if (comboCount.value >= POWER_MODE_ACTIVATION_THRESHOLD && !isOnPowerMode.value) {
+    isOnPowerMode.value = true
+  }
+
+  // @refreshStreakBar()
+  // @renderStreak()
+}
+
+const shake = () => {
+  if (!isOnPowerMode.value) return
+
+  const intensity =
+    1 + 2 * Math.random() * Math.floor((comboCount.value - POWER_MODE_ACTIVATION_THRESHOLD) / 100)
+  const x = intensity * (Math.random() > 0.5 ? -1 : 1)
+  const y = intensity * (Math.random() > 0.5 ? -1 : 1)
+
+  editorMargin.value = `${y}px ${x}px`
+
+  setTimeout(() => {
+    editorMargin.value = '0'
+  }, 75)
+}
+
+const createParticle = ({ x, y }) => {
+  const PARTICLE_VELOCITY_RANGE = {
+    x: [-2.5, 2.5],
+    y: [-7, -3.5]
+  }
+
+  const posX = x
+  const posY = y + 10
+  const alpha = 1
+  const color = '249, 255, 0' // TODO: essa cor deveria ser de acordo com o token que esta sendo escrito
+  const velocity = {
+    x:
+      PARTICLE_VELOCITY_RANGE.x[0] +
+      Math.random() * (PARTICLE_VELOCITY_RANGE.x[1] - PARTICLE_VELOCITY_RANGE.x[0]),
+    y:
+      PARTICLE_VELOCITY_RANGE.y[0] +
+      Math.random() * (PARTICLE_VELOCITY_RANGE.y[1] - PARTICLE_VELOCITY_RANGE.y[0])
+  }
+
+  return {
+    x: posX,
+    y: posY,
+    alpha,
+    color,
+    velocity
+  }
+}
+
+const drawParticles = () => {
+  canvasContext.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
+
+  const PARTICLE_SIZE = 8
+
+  for (let i = 0; i < particles.value.length; i++) {
+    const particle = particles.value[i]
+
+    particle.velocity.y += PARTICLE_GRAVITY.value
+    particle.x += particle.velocity.x
+    particle.y += particle.velocity.y
+    particle.alpha *= PARTICLE_ALPHA_FADEOUT.value
+
+    canvasContext.value.fillStyle = `rgba(${particle.color}, ${particle.alpha})`
+    canvasContext.value.fillRect(
+      Math.round(particle.x - PARTICLE_SIZE / 2),
+      Math.round(particle.y - PARTICLE_SIZE / 2),
+      PARTICLE_SIZE,
+      PARTICLE_SIZE
+    )
+  }
+}
+
+const spawParticles = ({ x, y }) => {
+  const numParticles = getRandomNumberBetween(5, MAX_PARTICLES)
+
+  for (let i = 0; i < numParticles; i++) {
+    particles.value[particlePointer.value] = createParticle({ x, y })
+    particlePointer.value = (particlePointer.value + 1) % MAX_PARTICLES
+  }
+}
+
+const throttledSpawnParticles = ({ x, y }) => {
+  throttle(
+    () => {
+      spawParticles({ x, y })
+    },
+    25,
+    { trailing: false }
+  )()
+}
+
+const onEditorChange = (value) => {
+  const currentPosition = value.selection.ranges[0].from - 1
+
+  if (currentPosition < 0) return
+
+  const coords = cm.value.view.coordsAtPos(currentPosition)
+
+  defer(() => {
+    throttledSpawnParticles({ x: coords.left, y: coords.top })
+  })
+}
+
+const onFrame = (time) => {
+  drawParticles(time - lastDraw.value)
+  lastDraw.value = time
+  window.requestAnimationFrame?.(onFrame)
 }
 
 onMounted(() => {
   getName()
+  canvasContext.value = canvas.value.getContext('2d')
+  canvas.value.width = window.innerWidth
+  canvas.value.height = window.innerHeight
+
+  window.requestAnimationFrame?.(onFrame)
 })
 </script>
 
@@ -129,6 +278,8 @@ onMounted(() => {
     :class="{ 'editor--power-mode': isOnPowerMode }"
     @click="closeInstructions"
   >
+    <canvas ref="canvas" class="editor-canvas" />
+
     <p v-if="isOnPowerMode" class="power-mode-title">POWER MODE!</p>
 
     <div class="combo">
@@ -144,12 +295,16 @@ onMounted(() => {
     </div>
 
     <CodeMirror
+      ref="cm"
       v-model="code"
+      :theme="theme"
+      :style="editorMargin"
       :extensions="extensions"
       :lang="lang"
       minimal
       tab
       @keydown="onType"
+      @change="onEditorChange"
     />
 
     <div class="name">
@@ -176,6 +331,14 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .editor {
+  &-canvas {
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    z-index: 10;
+  }
+
   .power-mode-title {
     color: #0df0df;
     font-family: 'Press Start 2P';
