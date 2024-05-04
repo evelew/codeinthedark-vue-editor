@@ -23,8 +23,25 @@ const router = useRouter()
 const contentStore = useContentStore()
 
 const MAX_PARTICLES = 12
-const EXCLAMATION_EVERY = 10
 const POWER_MODE_ACTIVATION_THRESHOLD = 200
+const EXCLAMATION_EVERY = 10
+const EXCLAMATIONS = [
+  'Super!',
+  'Radical!',
+  'Fantastic!',
+  'Great!',
+  'OMG',
+  'Whoah!',
+  ':O',
+  'Nice!',
+  'Splendid!',
+  'Wild!',
+  'Grand!',
+  'Impressive!',
+  'Stupendous!',
+  'Extreme!',
+  'Awesome!'
+]
 
 const cm = ref()
 const canvas = ref()
@@ -41,6 +58,7 @@ const isInstructionsVisible = ref(false)
 const isReferenceFocused = ref(false)
 const isComboBarAnimated = ref(false)
 const isOnPowerMode = ref(true)
+const currentExclamations = ref([])
 
 const editorMargin = ref('0px')
 const theme = computed(() => ({
@@ -143,20 +161,24 @@ const getRandomNumberBetween = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
+const showExclamation = () => {
+  currentExclamations.value.push(EXCLAMATIONS[getRandomNumberBetween(0, EXCLAMATIONS.length - 1)])
+
+  setTimeout(() => {
+    currentExclamations.value = currentExclamations.value.slice(1)
+  }, 1500)
+}
+
 const increaseStreak = () => {
   updateCombo()
 
   if (comboCount.value > 0 && comboCount.value % EXCLAMATION_EVERY === 0) {
-    console.log('show exclamation ')
-    // @showExclamation()
+    showExclamation()
   }
 
   if (comboCount.value >= POWER_MODE_ACTIVATION_THRESHOLD && !isOnPowerMode.value) {
     isOnPowerMode.value = true
   }
-
-  // @refreshStreakBar()
-  // @renderStreak()
 }
 
 const shake = () => {
@@ -292,6 +314,11 @@ onMounted(() => {
           'combo-bar--animation': isComboBarAnimated
         }"
       />
+      <div class="combo-exclamations">
+        <p v-for="item in currentExclamations" :key="item" class="combo-exclamations__item">
+          {{ item }}
+        </p>
+      </div>
     </div>
 
     <CodeMirror
@@ -330,7 +357,24 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+@keyframes exclamation {
+  100% {
+    opacity: 0;
+    transform: translate3D(0, 100px, 0);
+  }
+}
+
 .editor {
+  &.editor--power-mode {
+    .combo-number {
+      color: #00ddff;
+    }
+
+    .combo-bar {
+      background-color: #00ddff;
+    }
+  }
+
   &-canvas {
     left: 0;
     pointer-events: none;
@@ -382,6 +426,27 @@ onMounted(() => {
       &--animation {
         transform: scaleX(0);
         transition: all 10000ms linear;
+      }
+    }
+
+    &-exclamations {
+      margin-top: 10px;
+      position: absolute;
+      bottom: -20px;
+      right: 0;
+      display: block;
+      opacity: 0.75;
+      font-size: 20px;
+      text-align: right;
+      min-width: 200px;
+
+      &__item {
+        color: #00ddff;
+        right: 0;
+        top: 0;
+        display: block;
+        position: absolute;
+        animation: exclamation 1.5s ease-out both;
       }
     }
   }
