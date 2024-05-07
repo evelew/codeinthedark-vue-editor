@@ -51,13 +51,13 @@ const lastDraw = ref(0)
 const particlePointer = ref(0)
 const code = ref(null)
 const name = ref(null)
-const comboCount = ref(200) //TODO: change name to current streak and set initial value to 0
+const comboCount = ref(0) //TODO: change name to current streak
 const PARTICLE_ALPHA_FADEOUT = ref(0.96)
 const PARTICLE_GRAVITY = ref(0.075)
 const isInstructionsVisible = ref(false)
 const isReferenceFocused = ref(false)
 const isComboBarAnimated = ref(false)
-const isOnPowerMode = ref(true)
+const isOnPowerMode = ref(false)
 const currentExclamations = ref([])
 
 const editorMargin = ref('0px')
@@ -138,6 +138,7 @@ const getName = (forceNewName = false) => {
 
 const debouncedResetComboCount = debounce(() => {
   comboCount.value = 0
+  isOnPowerMode.value = false
 }, 10000)
 
 const updateCombo = () => {
@@ -162,6 +163,7 @@ const getRandomNumberBetween = (min, max) => {
 }
 
 const showExclamation = () => {
+  if (!isOnPowerMode.value) return
   currentExclamations.value.push(EXCLAMATIONS[getRandomNumberBetween(0, EXCLAMATIONS.length - 1)])
 
   setTimeout(() => {
@@ -273,6 +275,7 @@ const onEditorChange = (value) => {
 
   const coords = cm.value.view.coordsAtPos(currentPosition)
 
+  if (!isOnPowerMode.value) return
   defer(() => {
     throttledSpawnParticles({ x: coords.left, y: coords.top })
   })
@@ -364,6 +367,17 @@ onMounted(() => {
   }
 }
 
+@keyframes background-power {
+  0% {
+    animation-timing-function: ease-out;
+  }
+
+  50% {
+    transform: scale(1.5);
+    animation-timing-function: ease-in;
+  }
+}
+
 .editor {
   &.editor--power-mode {
     .combo-number {
@@ -380,7 +394,6 @@ onMounted(() => {
     pointer-events: none;
     position: absolute;
     top: 0;
-    z-index: 10;
   }
 
   .power-mode-title {
