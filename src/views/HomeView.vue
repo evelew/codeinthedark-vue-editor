@@ -275,10 +275,11 @@ const onEditorChange = (value) => {
 
   const coords = cm.value.view.coordsAtPos(currentPosition)
 
-  if (!isOnPowerMode.value) return
+  // if (isOnPowerMode.value) {
   defer(() => {
     throttledSpawnParticles({ x: coords.left, y: coords.top })
   })
+  // }
 }
 
 const onFrame = (time) => {
@@ -373,7 +374,7 @@ onMounted(() => {
   }
 
   50% {
-    transform: scale(1.5);
+    transform: scale(1.2);
     animation-timing-function: ease-in;
   }
 }
@@ -386,6 +387,14 @@ onMounted(() => {
 
     .combo-bar {
       background-color: #00ddff;
+    }
+
+    :deep(.cm-content) {
+      &:after {
+        animation: background-power 2s infinite both;
+        background-image: url('@/assets/editor/logo-power.png');
+        will-change: transform;
+      }
     }
   }
 
@@ -533,6 +542,20 @@ onMounted(() => {
   :deep(.cm-content) {
     color: #ffffff;
     caret-color: #ffffff !important;
+
+    &:after {
+      background-image: url('@/assets/editor/logo.png');
+      background-position: 50% 50%;
+      background-repeat: no-repeat;
+      background-size: 520px 476px;
+      content: '';
+      display: block;
+      left: 0;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      width: 100%;
+    }
   }
 
   :deep(.cm-editor) {
