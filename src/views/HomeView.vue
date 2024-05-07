@@ -275,11 +275,10 @@ const onEditorChange = (value) => {
 
   const coords = cm.value.view.coordsAtPos(currentPosition)
 
-  // if (isOnPowerMode.value) {
+  if (!isOnPowerMode.value) return
   defer(() => {
     throttledSpawnParticles({ x: coords.left, y: coords.top })
   })
-  // }
 }
 
 const onFrame = (time) => {
@@ -403,6 +402,7 @@ onMounted(() => {
     pointer-events: none;
     position: absolute;
     top: 0;
+    z-index: 1;
   }
 
   .power-mode-title {
@@ -555,6 +555,7 @@ onMounted(() => {
       position: absolute;
       top: 0;
       width: 100%;
+      z-index: -1;
     }
   }
 
