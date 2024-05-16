@@ -18,6 +18,7 @@ import Button from '@/components/Button.vue'
 import Instructions from '@/components/Instructions.vue'
 
 const STORAGE_NAME_KEY = 'name'
+const STORAGE_CONTENT_KEY = 'content'
 
 const router = useRouter()
 const contentStore = useContentStore()
@@ -152,6 +153,8 @@ const updateCombo = () => {
 }
 
 const onType = (event) => {
+  saveContent()
+
   if (event.key === 'Backspace') return
   increaseStreak()
   shake()
@@ -284,7 +287,16 @@ const onFrame = () => {
   window.requestAnimationFrame?.(onFrame)
 }
 
+const saveContent = debounce(() => {
+  window.localStorage.setItem(STORAGE_CONTENT_KEY, code.value)
+}, 300)
+
+const loadContent = () => {
+  code.value = window.localStorage.getItem(STORAGE_CONTENT_KEY)
+}
+
 onMounted(() => {
+  loadContent()
   getName()
   canvasContext.value = canvas.value.getContext('2d')
   canvas.value.width = window.innerWidth
