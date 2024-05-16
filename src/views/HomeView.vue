@@ -48,7 +48,6 @@ const cm = ref()
 const canvas = ref()
 const canvasContext = ref(null)
 const particles = ref([])
-const particlePointer = ref(0)
 const code = ref(null)
 const name = ref(null)
 const comboCount = ref(0) //TODO: change name to current streak
@@ -253,9 +252,8 @@ const spawnParticles = ({ x, y }) => {
   if (!isOnPowerMode.value) return
   const numParticles = getRandomNumberBetween(5, MAX_PARTICLES)
 
-  for (let i = 0; i < numParticles; i++) {
-    particles.value[particlePointer.value] = createParticle({ x, y })
-    particlePointer.value = (particlePointer.value + 1) % MAX_PARTICLES
+  for (let i = 0; i <= numParticles; i++) {
+    particles.value.push(createParticle({ x, y }))
   }
 }
 
@@ -270,13 +268,12 @@ const throttledSpawnParticles = ({ x, y }) => {
 }
 
 const onEditorChange = (value) => {
+  if (!isOnPowerMode.value) return
+
   const currentPosition = value.selection.ranges[0].from - 1
 
   if (currentPosition < 0) return
-
   const coords = cm.value.view.coordsAtPos(currentPosition)
-
-  if (!isOnPowerMode.value) return
   defer(() => {
     throttledSpawnParticles({ x: coords.left, y: coords.top })
   })
