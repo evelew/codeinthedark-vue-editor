@@ -23,6 +23,7 @@ const router = useRouter()
 const contentStore = useContentStore()
 
 const MAX_PARTICLES = 12
+const PARTICLE_SIZE = 8
 const POWER_MODE_ACTIVATION_THRESHOLD = 200
 const EXCLAMATION_EVERY = 10
 const EXCLAMATIONS = [
@@ -47,7 +48,6 @@ const cm = ref()
 const canvas = ref()
 const canvasContext = ref(null)
 const particles = ref([])
-const lastDraw = ref(0)
 const particlePointer = ref(0)
 const code = ref(null)
 const name = ref(null)
@@ -207,7 +207,7 @@ const createParticle = ({ x, y }) => {
   const posX = x
   const posY = y + 10
   const alpha = 1
-  const color = '249, 255, 0' // TODO: essa cor deveria ser de acordo com o token que esta sendo escrito
+  const color = [249, 255, 0] // TODO: essa cor deveria ser de acordo com o token que esta sendo escrito
   const velocity = {
     x:
       PARTICLE_VELOCITY_RANGE.x[0] +
@@ -229,27 +229,28 @@ const createParticle = ({ x, y }) => {
 const drawParticles = () => {
   canvasContext.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
 
-  const PARTICLE_SIZE = 8
-
   for (let i = 0; i < particles.value.length; i++) {
     const particle = particles.value[i]
 
-    particle.velocity.y += PARTICLE_GRAVITY.value
-    particle.x += particle.velocity.x
-    particle.y += particle.velocity.y
-    particle.alpha *= PARTICLE_ALPHA_FADEOUT.value
+    if (!particle.alpha <= 0.1) {
+      particle.velocity.y += PARTICLE_GRAVITY.value
+      particle.x += particle.velocity.x
+      particle.y += particle.velocity.y
+      particle.alpha *= PARTICLE_ALPHA_FADEOUT.value
 
-    canvasContext.value.fillStyle = `rgba(${particle.color}, ${particle.alpha})`
-    canvasContext.value.fillRect(
-      Math.round(particle.x - PARTICLE_SIZE / 2),
-      Math.round(particle.y - PARTICLE_SIZE / 2),
-      PARTICLE_SIZE,
-      PARTICLE_SIZE
-    )
+      canvasContext.value.fillStyle = `rgba(${particle.color.join(', ')}, ${particle.alpha})`
+      canvasContext.value.fillRect(
+        Math.round(particle.x - PARTICLE_SIZE / 2),
+        Math.round(particle.y - PARTICLE_SIZE / 2),
+        PARTICLE_SIZE,
+        PARTICLE_SIZE
+      )
+    }
   }
 }
 
-const spawParticles = ({ x, y }) => {
+const spawnParticles = ({ x, y }) => {
+  if (!isOnPowerMode.value) return
   const numParticles = getRandomNumberBetween(5, MAX_PARTICLES)
 
   for (let i = 0; i < numParticles; i++) {
@@ -261,7 +262,7 @@ const spawParticles = ({ x, y }) => {
 const throttledSpawnParticles = ({ x, y }) => {
   throttle(
     () => {
-      spawParticles({ x, y })
+      spawnParticles({ x, y })
     },
     25,
     { trailing: false }
@@ -281,9 +282,8 @@ const onEditorChange = (value) => {
   })
 }
 
-const onFrame = (time) => {
-  drawParticles(time - lastDraw.value)
-  lastDraw.value = time
+const onFrame = () => {
+  drawParticles()
   window.requestAnimationFrame?.(onFrame)
 }
 
