@@ -9,7 +9,7 @@ import CodeMirror from 'vue-codemirror6'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { Compartment } from '@codemirror/state'
 import { html } from '@codemirror/lang-html'
-import { syntaxHighlighting } from '@codemirror/language'
+import { syntaxHighlighting, syntaxTree } from '@codemirror/language'
 import { classHighlighter, tagHighlighter, tags } from '@lezer/highlight'
 
 import { useContentStore } from '@/store/contentStore'
@@ -67,6 +67,21 @@ const theme = computed(() => ({
   }
 }))
 
+const tokenMapper = {
+  AttributeName: [129, 148, 244],
+  TagName: [0, 221, 255],
+  Name: [249, 255, 0],
+  AngleBracket: [0, 221, 255],
+  ClassName: [0, 221, 255],
+  TypeName: [0, 221, 255],
+  RuleSet: [255, 255, 255],
+  Declaration: [255, 255, 255],
+  Comment: [0, 255, 121],
+  Atom: [249, 255, 0],
+  Operator: [249, 255, 0],
+  String: [249, 255, 0]
+}
+
 const lang = new Compartment().of(html())
 const extensions = [
   lineNumbers(),
@@ -92,7 +107,7 @@ const extensions = [
       },
       {
         tag: tags.attributeName,
-        class: 'tok-atribute-name'
+        class: 'tok-attribute-name'
       }
     ])
   )
@@ -200,7 +215,7 @@ const shake = () => {
   }, 75)
 }
 
-const createParticle = ({ x, y }) => {
+const createParticle = ({ x, y, charColor }) => {
   const PARTICLE_VELOCITY_RANGE = {
     x: [-2.5, 2.5],
     y: [-7, -3.5]
@@ -209,7 +224,7 @@ const createParticle = ({ x, y }) => {
   const posX = x
   const posY = y + 10
   const alpha = 1
-  const color = [249, 255, 0] // TODO: essa cor deveria ser de acordo com o token que esta sendo escrito
+  const color = charColor || [249, 255, 0]
   const velocity = {
     x:
       PARTICLE_VELOCITY_RANGE.x[0] +
@@ -251,19 +266,19 @@ const drawParticles = () => {
   }
 }
 
-const spawnParticles = ({ x, y }) => {
+const spawnParticles = ({ x, y, charColor }) => {
   if (!isOnPowerMode.value) return
   const numParticles = getRandomNumberBetween(5, MAX_PARTICLES)
 
   for (let i = 0; i <= numParticles; i++) {
-    particles.value.push(createParticle({ x, y }))
+    particles.value.push(createParticle({ x, y, charColor }))
   }
 }
 
-const throttledSpawnParticles = ({ x, y }) => {
+const throttledSpawnParticles = ({ x, y, charColor }) => {
   throttle(
     () => {
-      spawnParticles({ x, y })
+      spawnParticles({ x, y, charColor })
     },
     25,
     { trailing: false }
@@ -277,8 +292,9 @@ const onEditorChange = (value) => {
 
   if (currentPosition < 0) return
   const coords = cm.value.view.coordsAtPos(currentPosition)
+  const charToken = syntaxTree(cm.value.view.state).resolve(currentPosition).type.name
   defer(() => {
-    throttledSpawnParticles({ x: coords.left, y: coords.top })
+    throttledSpawnParticles({ x: coords.left, y: coords.top, charColor: tokenMapper[charToken] })
   })
 }
 
@@ -420,6 +436,7 @@ onMounted(() => {
     font-family: 'Press Start 2P';
     font-size: 40px;
     left: 50%;
+    pointer-events: none;
     position: absolute;
     transform: translateX(-50%);
     top: 20px;
