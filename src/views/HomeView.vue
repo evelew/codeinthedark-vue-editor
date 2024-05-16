@@ -117,7 +117,7 @@ const finish = () => {
     'This will show the results of your code. Doing this before the round is over WILL DISQUALIFY YOU. Are you sure you want to proceed? Type "yes" to confirm.'
   )
 
-  if (res.toLowerCase() === 'yes') {
+  if (res?.toLowerCase() === 'yes') {
     contentStore.setFinalCode(code.value)
     router.push({ name: 'result' })
   }
@@ -376,6 +376,8 @@ onMounted(() => {
 }
 
 .editor {
+  overflow: hidden;
+
   &.editor--power-mode {
     .combo-number {
       color: #00ddff;
@@ -389,7 +391,6 @@ onMounted(() => {
       &:after {
         animation: background-power 2s infinite both;
         background-image: url('@/assets/editor/logo-power.png');
-        will-change: transform;
       }
     }
   }
@@ -549,9 +550,10 @@ onMounted(() => {
       display: block;
       left: 0;
       height: 100vh;
-      position: absolute;
+      position: fixed;
       top: 0;
       width: 100%;
+      will-change: transform;
       z-index: -1;
     }
   }
