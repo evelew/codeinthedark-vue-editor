@@ -33,5 +33,6 @@
   position: absolute;
   transform: translate(-50%, -50%);
   top: 50%;
+  z-index: 5;
 }
 </style>

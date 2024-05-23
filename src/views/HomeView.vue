@@ -1,15 +1,12 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import debounce from 'lodash/debounce'
-import defer from 'lodash/defer'
-import throttle from 'lodash/throttle'
 
 import CodeMirror from 'vue-codemirror6'
 import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
 import { Compartment } from '@codemirror/state'
 import { html } from '@codemirror/lang-html'
-import { syntaxHighlighting, syntaxTree } from '@codemirror/language'
+import { syntaxHighlighting } from '@codemirror/language'
 import { classHighlighter, tagHighlighter, tags } from '@lezer/highlight'
 
 import { useContentStore } from '@/store/contentStore'
@@ -17,70 +14,33 @@ import { useContentStore } from '@/store/contentStore'
 import Button from '@/components/Button.vue'
 import Instructions from '@/components/Instructions.vue'
 
+import useEditor from './useEditor'
+
 const STORAGE_NAME_KEY = 'name'
-const STORAGE_CONTENT_KEY = 'content'
 
 const router = useRouter()
 const contentStore = useContentStore()
 
-const MAX_PARTICLES = 12
-const PARTICLE_SIZE = 8
-const POWER_MODE_ACTIVATION_THRESHOLD = 200
-const EXCLAMATION_EVERY = 10
-const EXCLAMATIONS = [
-  'Super!',
-  'Radical!',
-  'Fantastic!',
-  'Great!',
-  'OMG',
-  'Whoah!',
-  ':O',
-  'Nice!',
-  'Splendid!',
-  'Wild!',
-  'Grand!',
-  'Impressive!',
-  'Stupendous!',
-  'Extreme!',
-  'Awesome!'
-]
-
 const cm = ref()
 const canvas = ref()
-const canvasContext = ref(null)
-const particles = ref([])
 const code = ref(null)
-const name = ref(null)
-const comboCount = ref(0) //TODO: change name to current streak
-const PARTICLE_ALPHA_FADEOUT = ref(0.96)
-const PARTICLE_GRAVITY = ref(0.075)
 const isInstructionsVisible = ref(false)
 const isReferenceFocused = ref(false)
-const isComboBarAnimated = ref(false)
-const isOnPowerMode = ref(false)
-const currentExclamations = ref([])
 
-const editorMargin = ref('0px')
-const theme = computed(() => ({
-  '.cm-scroller': {
-    margin: editorMargin.value
-  }
-}))
-
-const tokenMapper = {
-  AttributeName: [129, 148, 244],
-  TagName: [0, 221, 255],
-  Name: [249, 255, 0],
-  AngleBracket: [0, 221, 255],
-  ClassName: [0, 221, 255],
-  TypeName: [0, 221, 255],
-  RuleSet: [255, 255, 255],
-  Declaration: [255, 255, 255],
-  Comment: [0, 255, 121],
-  Atom: [249, 255, 0],
-  Operator: [249, 255, 0],
-  String: [249, 255, 0]
-}
+const {
+  comboCount,
+  currentExclamations,
+  theme,
+  editorMargin,
+  name,
+  isComboBarAnimated,
+  isOnPowerMode,
+  drawParticles,
+  loadContent,
+  onEditorChange,
+  setupCanvas,
+  onType
+} = useEditor({ cm, code, canvas })
 
 const lang = new Compartment().of(html())
 const extensions = [
@@ -151,173 +111,19 @@ const getName = (forceNewName = false) => {
   name.value = userName
 }
 
-const debouncedResetComboCount = debounce(() => {
-  comboCount.value = 0
-  isOnPowerMode.value = false
-}, 10000)
-
-const updateCombo = () => {
-  isComboBarAnimated.value = false
-
-  comboCount.value++
-  debouncedResetComboCount()
-
-  defer(() => {
-    isComboBarAnimated.value = true
-  })
-}
-
-const onType = (event) => {
-  saveContent()
-
-  if (event.key === 'Backspace') return
-  increaseStreak()
-  shake()
-}
-
-const getRandomNumberBetween = (min, max) => {
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
-
-const showExclamation = () => {
-  if (!isOnPowerMode.value) return
-  currentExclamations.value.push(EXCLAMATIONS[getRandomNumberBetween(0, EXCLAMATIONS.length - 1)])
-
-  setTimeout(() => {
-    currentExclamations.value = currentExclamations.value.slice(1)
-  }, 1500)
-}
-
-const increaseStreak = () => {
-  updateCombo()
-
-  if (comboCount.value > 0 && comboCount.value % EXCLAMATION_EVERY === 0) {
-    showExclamation()
-  }
-
-  if (comboCount.value >= POWER_MODE_ACTIVATION_THRESHOLD && !isOnPowerMode.value) {
-    isOnPowerMode.value = true
-  }
-}
-
-const shake = () => {
-  if (!isOnPowerMode.value) return
-
-  const intensity =
-    1 + 2 * Math.random() * Math.floor((comboCount.value - POWER_MODE_ACTIVATION_THRESHOLD) / 100)
-  const x = intensity * (Math.random() > 0.5 ? -1 : 1)
-  const y = intensity * (Math.random() > 0.5 ? -1 : 1)
-
-  editorMargin.value = `${y}px ${x}px`
-
-  setTimeout(() => {
-    editorMargin.value = '0'
-  }, 75)
-}
-
-const createParticle = ({ x, y, charColor }) => {
-  const PARTICLE_VELOCITY_RANGE = {
-    x: [-2.5, 2.5],
-    y: [-7, -3.5]
-  }
-
-  const posX = x
-  const posY = y + 10
-  const alpha = 1
-  const color = charColor || [249, 255, 0]
-  const velocity = {
-    x:
-      PARTICLE_VELOCITY_RANGE.x[0] +
-      Math.random() * (PARTICLE_VELOCITY_RANGE.x[1] - PARTICLE_VELOCITY_RANGE.x[0]),
-    y:
-      PARTICLE_VELOCITY_RANGE.y[0] +
-      Math.random() * (PARTICLE_VELOCITY_RANGE.y[1] - PARTICLE_VELOCITY_RANGE.y[0])
-  }
-
-  return {
-    x: posX,
-    y: posY,
-    alpha,
-    color,
-    velocity
-  }
-}
-
-const drawParticles = () => {
-  canvasContext.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
-
-  for (let i = 0; i < particles.value.length; i++) {
-    const particle = particles.value[i]
-
-    if (!particle.alpha <= 0.1) {
-      particle.velocity.y += PARTICLE_GRAVITY.value
-      particle.x += particle.velocity.x
-      particle.y += particle.velocity.y
-      particle.alpha *= PARTICLE_ALPHA_FADEOUT.value
-
-      canvasContext.value.fillStyle = `rgba(${particle.color.join(', ')}, ${particle.alpha})`
-      canvasContext.value.fillRect(
-        Math.round(particle.x - PARTICLE_SIZE / 2),
-        Math.round(particle.y - PARTICLE_SIZE / 2),
-        PARTICLE_SIZE,
-        PARTICLE_SIZE
-      )
-    }
-  }
-}
-
-const spawnParticles = ({ x, y, charColor }) => {
-  if (!isOnPowerMode.value) return
-  const numParticles = getRandomNumberBetween(5, MAX_PARTICLES)
-
-  for (let i = 0; i <= numParticles; i++) {
-    particles.value.push(createParticle({ x, y, charColor }))
-  }
-}
-
-const throttledSpawnParticles = ({ x, y, charColor }) => {
-  throttle(
-    () => {
-      spawnParticles({ x, y, charColor })
-    },
-    25,
-    { trailing: false }
-  )()
-}
-
-const onEditorChange = (value) => {
-  if (!isOnPowerMode.value) return
-
-  const currentPosition = value.selection.ranges[0].from - 1
-
-  if (currentPosition < 0) return
-  const coords = cm.value.view.coordsAtPos(currentPosition)
-  const charToken = syntaxTree(cm.value.view.state).resolve(currentPosition).type.name
-  defer(() => {
-    throttledSpawnParticles({ x: coords.left, y: coords.top, charColor: tokenMapper[charToken] })
-  })
-}
-
 const onFrame = () => {
   drawParticles()
   window.requestAnimationFrame?.(onFrame)
 }
 
-const saveContent = debounce(() => {
-  window.localStorage.setItem(STORAGE_CONTENT_KEY, code.value)
-}, 300)
-
-const loadContent = () => {
-  code.value = window.localStorage.getItem(STORAGE_CONTENT_KEY)
+const init = () => {
+  loadContent()
+  getName()
+  setupCanvas()
 }
 
 onMounted(() => {
-  loadContent()
-  getName()
-  canvasContext.value = canvas.value.getContext('2d')
-  canvas.value.width = window.innerWidth
-  canvas.value.height = window.innerHeight
-
+  init()
   window.requestAnimationFrame?.(onFrame)
 })
 </script>
@@ -514,6 +320,7 @@ onMounted(() => {
     transform: translate(-50%, -50%);
     top: 50%;
     width: 800px;
+    z-index: 5;
   }
 
   .right-bottom {
