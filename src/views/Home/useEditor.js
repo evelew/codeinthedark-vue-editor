@@ -24,9 +24,8 @@ const useEditor = ({ cm, code, canvas }) => {
 
   const canvasContext = ref(null)
   const currentExclamations = ref([])
-  const comboCount = ref(0) //TODO: change name to current streak
+  const comboCount = ref(0)
   const editorMargin = ref('0px')
-  const name = ref(null)
   const particles = ref([])
 
   const theme = computed(() => ({
@@ -205,7 +204,6 @@ const useEditor = ({ cm, code, canvas }) => {
     comboCount,
     currentExclamations,
     editorMargin,
-    name,
     isComboBarAnimated,
     isOnPowerMode,
     theme,

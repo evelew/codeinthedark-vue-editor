@@ -1,38 +1,24 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-
 import CodeMirror from 'vue-codemirror6'
-import { lineNumbers, highlightActiveLineGutter } from '@codemirror/view'
-import { Compartment } from '@codemirror/state'
-import { html } from '@codemirror/lang-html'
-import { syntaxHighlighting } from '@codemirror/language'
-import { classHighlighter, tagHighlighter, tags } from '@lezer/highlight'
-
-import { useContentStore } from '@/store/contentStore'
 
 import Button from '@/components/Button.vue'
 import Instructions from '@/components/Instructions.vue'
 
+import useEditorSettings from './useEditorSettings'
 import useEditor from './useEditor'
-
-const STORAGE_NAME_KEY = 'name'
-
-const router = useRouter()
-const contentStore = useContentStore()
+import useInteractions from './useInteractions'
 
 const cm = ref()
 const canvas = ref()
 const code = ref(null)
-const isInstructionsVisible = ref(false)
-const isReferenceFocused = ref(false)
 
+const { extensions, lang } = useEditorSettings()
 const {
   comboCount,
   currentExclamations,
   theme,
   editorMargin,
-  name,
   isComboBarAnimated,
   isOnPowerMode,
   drawParticles,
@@ -41,75 +27,16 @@ const {
   setupCanvas,
   onType
 } = useEditor({ cm, code, canvas })
-
-const lang = new Compartment().of(html())
-const extensions = [
-  lineNumbers(),
-  highlightActiveLineGutter(),
-  syntaxHighlighting(classHighlighter),
-  syntaxHighlighting(
-    tagHighlighter([
-      {
-        tag: tags.angleBracket,
-        class: 'tok-angle-bracket'
-      },
-      {
-        tag: tags.name,
-        class: 'tok-name'
-      },
-      {
-        tag: tags.tagName,
-        class: 'tok-tag-name'
-      },
-      {
-        tag: tags.className,
-        class: 'tok-class-name'
-      },
-      {
-        tag: tags.attributeName,
-        class: 'tok-attribute-name'
-      }
-    ])
-  )
-]
-
-const focusOnReference = () => {
-  isReferenceFocused.value = true
-  isInstructionsVisible.value = false
-}
-
-const showInstructions = () => {
-  isInstructionsVisible.value = true
-  isReferenceFocused.value = false
-}
-
-const closeInstructions = () => {
-  isInstructionsVisible.value = false
-  isReferenceFocused.value = false
-}
-
-const finish = () => {
-  const res = prompt(
-    'This will show the results of your code. Doing this before the round is over WILL DISQUALIFY YOU. Are you sure you want to proceed? Type "yes" to confirm.'
-  )
-
-  if (res?.toLowerCase() === 'yes') {
-    contentStore.setFinalCode(code.value)
-    router.push({ name: 'result' })
-  }
-}
-
-const getName = (forceNewName = false) => {
-  const localStorageName = localStorage.getItem(STORAGE_NAME_KEY)
-  if (localStorageName && !forceNewName) {
-    name.value = localStorageName
-    return
-  }
-
-  const userName = prompt("what's your name?")
-  localStorage.setItem(STORAGE_NAME_KEY, userName)
-  name.value = userName
-}
+const {
+  name,
+  isReferenceFocused,
+  isInstructionsVisible,
+  focusOnReference,
+  showInstructions,
+  closeInstructions,
+  finish,
+  getName
+} = useInteractions({ code })
 
 const onFrame = () => {
   drawParticles()
