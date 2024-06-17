@@ -1,7 +1,10 @@
+@import './themes/default';
+
 @keyframes pulse {
   0% {
     animation-timing-function: ease-out;
   }
+
   50% {
     opacity: 0.5;
     animation-timing-function: ease-in;
@@ -12,6 +15,7 @@
   0% {
     animation-timing-function: ease-out;
   }
+
   50% {
     transform: scale(1.1);
     animation-timing-function: ease-in;
@@ -45,15 +49,15 @@ main {
 .tok-typeName,
 .tok-className,
 .tok-angle-bracket {
-  color: #00ff79;
+  color: var(--operator);
 }
 
-.tok-atribute-name {
-  color: #99cc99;
+.tok-attribute-name {
+  color: var(--attribute-name);
 }
 
 .tok-comment {
-  color: #0dfdff;
+  color: var(--comment);
   display: inline-block;
   animation: grow 1.5s infinite both;
 }
@@ -62,31 +66,9 @@ main {
 .tok-operator,
 .tok-string,
 .tok-name {
-  color: #f9ff00;
+  color: var(--atom);
   animation: pulse 1.5s infinite both;
 }
 
-.editor--power-mode {
-  .tok-operator,
-  .tok-typeName,
-  .tok-className,
-  .tok-angle-bracket {
-    color: #00ddff;
-  }
 
-  .tok-comment {
-    color: #00ff79;
-  }
-
-  .tok-atom,
-  .tok-operator,
-  .tok-string,
-  .tok-name {
-    color: #f9ff00;
-  }
-
-  .tok-attribute-name {
-    color: #8194f4;
-  }
-}
 /* end editor code styles */

@@ -36,5 +36,6 @@ export const TOKEN_COLOR_MAP = {
   Atom: [249, 255, 0],
   Operator: [249, 255, 0],
   String: [249, 255, 0],
-  Text: [255, 255, 255]
+  Text: [255, 255, 255],
+  PseudoClassName: [0, 221, 255]
 }

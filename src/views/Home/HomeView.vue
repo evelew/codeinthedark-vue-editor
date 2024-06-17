@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import CodeMirror from 'vue-codemirror6'
 
 import Button from '@/components/Button.vue'
@@ -48,6 +48,15 @@ const init = () => {
   getName()
   setupCanvas()
 }
+
+watch(isOnPowerMode, (value) => {
+  if (value) {
+    document.body.classList.add('power-mode')
+    return
+  }
+
+  document.body.classList.remove('power-mode')
+})
 
 onMounted(() => {
   init()
