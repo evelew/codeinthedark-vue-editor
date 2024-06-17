@@ -3,6 +3,8 @@ import debounce from 'lodash/debounce'
 import defer from 'lodash/defer'
 import throttle from 'lodash/throttle'
 
+import { syntaxTree } from '@codemirror/language'
+
 import {
   EXCLAMATIONS,
   EXCLAMATION_EVERY,
@@ -13,8 +15,6 @@ import {
   POWER_MODE_ACTIVATION_THRESHOLD,
   TOKEN_COLOR_MAP
 } from '@/constants/editor-animation'
-
-import { syntaxTree } from '@codemirror/language'
 
 const STORAGE_CONTENT_KEY = 'content'
 
@@ -67,7 +67,12 @@ const useEditor = ({ cm, code, canvas }) => {
     canvas.value.height = window.innerHeight
   }
 
+  const isCharacterKey = (event) => {
+    return event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey
+  }
+
   const onType = (event) => {
+    if (!isCharacterKey(event)) return
     saveContent()
 
     if (event.key === 'Backspace') return
@@ -190,7 +195,6 @@ const useEditor = ({ cm, code, canvas }) => {
     if (currentPosition < 0) return
     const coords = cm.value.view.coordsAtPos(currentPosition)
     const charToken = syntaxTree(cm.value.view.state).resolve(currentPosition).type.name
-    console.log({ charToken })
     defer(() => {
       throttledSpawnParticles({
         x: coords.left,
