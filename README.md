@@ -1,16 +1,14 @@
-# .
+# Code in the dark editor in Vue
 
-This template should help get you started developing with Vue 3 in Vite.
+In this project you will find the [code in the dark editor](https://github.com/codeinthedark/editor) write with Vue 3.
 
-## Recommended IDE Setup
+## How to use
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Replace `assets/challenge/page.jpg` with the layout that will be used in your competition
+- Add extra files, images for example, in the assets folder
+- Edit the instructions in the file `src/components/Instructions.vue`
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
+## Commands
 
 ```sh
 npm install
