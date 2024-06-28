@@ -1,6 +1,6 @@
 # Code in the dark editor in Vue
 
-In this project you will find the [code in the dark editor](https://github.com/codeinthedark/editor) write with Vue 3.
+In this project, you will find the [code in the dark editor](https://github.com/codeinthedark/editor) written with Vue 3.
 
 ## How to use
 
