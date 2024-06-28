@@ -2,6 +2,8 @@
 
 In this project, you will find the [code in the dark editor](https://github.com/codeinthedark/editor) written with Vue 3.
 
+You can access this version [here](https://codeinthedark.evellynlima.com.br), it's just the same as the original.
+
 ## How to use
 
 - Replace `assets/challenge/page.jpg` with the layout that will be used in your competition
